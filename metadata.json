@@ -1,0 +1,7 @@
+{
+  "name": "AI Interview Prep Pro",
+  "description": "An AI-powered platform for mock interviews with voice input, resume analysis, and detailed feedback.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
