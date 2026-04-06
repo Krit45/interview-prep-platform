@@ -1,0 +1,64 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile and resume data",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "resumeText": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email"]
+    },
+    "Interview": {
+      "title": "Interview",
+      "description": "Interview session data",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "type": { "type": "string", "enum": ["HR", "Technical", "Coding"] },
+        "role": { "type": "string" },
+        "difficulty": { "type": "string", "enum": ["Beginner", "Intermediate", "Advanced"] },
+        "status": { "type": "string", "enum": ["pending", "completed"] },
+        "score": { "type": "number" },
+        "feedback": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "type", "role", "difficulty", "status"]
+    },
+    "Response": {
+      "title": "Response",
+      "description": "Individual question response",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "interviewId": { "type": "string" },
+        "question": { "type": "string" },
+        "answer": { "type": "string" },
+        "score": { "type": "number" },
+        "feedback": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["interviewId", "question", "answer"]
+    }
+  },
+  "firestore": {
+    "/users/{uid}": {
+      "schema": "User",
+      "description": "User profiles"
+    },
+    "/interviews/{interviewId}": {
+      "schema": "Interview",
+      "description": "Interview sessions"
+    },
+    "/interviews/{interviewId}/responses/{responseId}": {
+      "schema": "Response",
+      "description": "Responses for a specific interview"
+    }
+  }
+}

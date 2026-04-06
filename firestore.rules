@@ -1,0 +1,110 @@
+// ===============================================================
+// Assumed Data Model
+// ===============================================================
+//
+// Collection: users
+// Document ID: {uid}
+// Fields:
+//   - uid: string (required)
+//   - email: string (required)
+//   - displayName: string (optional)
+//   - photoURL: string (optional)
+//   - resumeText: string (optional)
+//   - createdAt: timestamp (required)
+//
+// Collection: interviews
+// Document ID: {interviewId}
+// Fields:
+//   - userId: string (required)
+//   - type: string (required, HR|Technical|Coding)
+//   - role: string (required)
+//   - difficulty: string (required, Beginner|Intermediate|Advanced)
+//   - status: string (required, pending|completed)
+//   - score: number (optional)
+//   - feedback: string (optional)
+//   - createdAt: timestamp (required)
+//
+// Collection: interviews/{interviewId}/responses
+// Document ID: {responseId}
+// Fields:
+//   - interviewId: string (required)
+//   - question: string (required)
+//   - answer: string (required)
+//   - score: number (optional)
+//   - feedback: string (optional)
+//   - createdAt: timestamp (required)
+//
+// ===============================================================
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && 
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+         (request.auth.token.email == "kritagyagupta48@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+
+    function isValidUser(data) {
+      return data.uid is string && data.uid.size() > 0 &&
+             data.email is string && data.email.size() > 0;
+    }
+
+    function isValidInterview(data) {
+      return data.userId == request.auth.uid &&
+             data.type in ['HR', 'Technical', 'Coding'] &&
+             data.role is string && data.role.size() > 0 &&
+             data.difficulty in ['Beginner', 'Intermediate', 'Advanced'] &&
+             data.status in ['pending', 'completed'];
+    }
+
+    function isValidResponse(data) {
+      return data.interviewId is string &&
+             data.question is string && data.question.size() > 0 &&
+             data.answer is string;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{uid} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow create: if isOwner(uid) && isValidUser(request.resource.data);
+      allow update: if isOwner(uid) && isValidUser(request.resource.data);
+    }
+
+    match /interviews/{interviewId} {
+      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && isValidInterview(request.resource.data);
+      allow update: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin()) && isValidInterview(request.resource.data);
+      
+      match /responses/{responseId} {
+        allow read: if isAuthenticated() && (get(/databases/$(database)/documents/interviews/$(interviewId)).data.userId == request.auth.uid || isAdmin());
+        allow create: if isAuthenticated() && (get(/databases/$(database)/documents/interviews/$(interviewId)).data.userId == request.auth.uid) && isValidResponse(request.resource.data);
+        allow update: if isAuthenticated() && (get(/databases/$(database)/documents/interviews/$(interviewId)).data.userId == request.auth.uid || isAdmin()) && isValidResponse(request.resource.data);
+      }
+    }
+  }
+}
