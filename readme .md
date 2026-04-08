@@ -6,7 +6,7 @@
 
 ## 🌟 Overview
 
-**AI Interview Prep Pro** is a full-stack web application that simulates real interview environments and helps users prepare effectively using artificial intelligence.
+**AI Interview Preparation Pro** is a full-stack web application that simulates real interview environments and helps users prepare effectively using artificial intelligence.
 
 It allows users to:
 
